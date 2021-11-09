@@ -1,5 +1,27 @@
-# Autoscaling 
+# VirtualService 
 
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: reviews
+spec:
+  hosts:
+  - reviews		# 服务地址，可以是 IP 地址、DNS 名称，或者依赖于平台的一个简称。
+  http:
+  - match:		# 匹配规则，路由规则按从上到下的顺序选择，虚拟服务中定义的第一条规则有最高优先级。
+    - headers:
+        end-user:
+          exact: jason	# 匹配条件， end-user header值为jason
+    route:
+    - destination:	# 符合匹配条件的流量目标地址，destination 的 host 必须是存在于 Istio 服务注册中心的实际目标地址。
+        host: reviews	# host 必须是存在于 Istio 服务注册中心的实际目标地址，否则 Envoy 不知道该将请求发送到哪里。
+        subset: v2
+  - route:
+    - destination:	# 默认路由规则，确保流经虚拟服务的流量至少能够匹配一条路由规则
+        host: reviews
+        subset: v3
+```
 
 # Gateway
 
