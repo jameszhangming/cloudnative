@@ -20,8 +20,8 @@ servers:
        - demo.example.com
     tls:
        mode: SIMPLE
-       serverCertificate: /tmp/tls.crt
-       privateKey: /tmp/tls.key
+       serverCertificate: /tmp/tls.crt  # å…¬é’¥
+       privateKey: /tmp/tls.key  # ç§é’¥
 ```
 
 # ServiceEntry
@@ -34,22 +34,22 @@ metadata:
   namespace: powerful
 spec:  
   exportTo:  
-  - '*'     # Ä¬ÈÏÇé¿öÏÂÊ¹ÓÃ¡°*¡±£¬ÕâÒâÎ¶×Å¸ÃServiceEntry¹«¿ª¸øÃ¿¸öÃüÃû¿Õ¼ä¡£¡°.¡±½ö½«ÆäÏŞÖÆÎªµ±Ç°ÃüÃû¿Õ¼ä¡£
+  - '*'     # é»˜è®¤æƒ…å†µä¸‹ä½¿ç”¨â€œ*â€ï¼Œè¿™æ„å‘³ç€è¯¥ServiceEntryå…¬å¼€ç»™æ¯ä¸ªå‘½åç©ºé—´ã€‚â€œ.â€ä»…å°†å…¶é™åˆ¶ä¸ºå½“å‰å‘½åç©ºé—´ã€‚
   hosts:  
-  - vmapp.powerful.svc.cluster.local     # ·ÃÎÊµØÖ·
+  - vmapp.powerful.svc.cluster.local     # è®¿é—®åœ°å€
   location: MESH_EXTERNAL  
   ports:  
   - name: http    
-    number: 80                        # ·şÎñ¶Ë¿Ú
+    number: 80                        # æœåŠ¡ç«¯å£
     protocol: HTTP  
   resolution: STATIC  
   endpoints:  
-    - address: 172.16.16.34       #  ĞéÄâ»úµÄµØÖ·
+    - address: 172.16.16.34       #  è™šæ‹Ÿæœºçš„åœ°å€
       labels:      
         app: vmapp
         nsf.skiff.netease.com/platform: virutalmachine    
       ports:      
-        http: 19990              # ĞéÄâ»úÉÏ·şÎñ±©Â¶µÄ¶Ë¿Ú
+        http: 19990              # è™šæ‹Ÿæœºä¸ŠæœåŠ¡æš´éœ²çš„ç«¯å£
 ```
 
 
