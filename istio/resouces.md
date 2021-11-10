@@ -1,5 +1,7 @@
 # VirtualService 
 
+
+
 ```YAML
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -7,12 +9,12 @@ metadata:
   name: reviews
 spec:
   hosts:
-  - reviews		# 服务地址，可以是 IP 地址、DNS 名称，或者依赖于平台的一个简称。
+  - reviews		# 域名匹配规则，VirtualService中的规则只影响与hosts匹配的请求，可以是 IP 地址、DNS 名称，或者依赖于平台的一个简称（FQDN）。
   http:
   - match:		# 匹配规则，路由规则按从上到下的顺序选择，虚拟服务中定义的第一条规则有最高优先级。
     - headers:
         end-user:
-          exact: jason	# 匹配条件， end-user header值为jason
+          exact: jason	# 匹配条件， end-user header值为jason（精确匹配）
     route:
     - destination:	# 符合匹配条件的流量目标地址，destination 的 host 必须是存在于 Istio 服务注册中心的实际目标地址。
         host: reviews	# host 必须是存在于 Istio 服务注册中心的实际目标地址，否则 Envoy 不知道该将请求发送到哪里。
