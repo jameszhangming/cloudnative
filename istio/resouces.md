@@ -1,6 +1,37 @@
 # VirtualService 
 
+VirtualService 由一组路由规则组成，用于对服务实体（在 Kubernetes 中对应为 Pod）进行寻址。如果有流量命中了某条路由规则，就会将其发送到对应的服务或者服务的一个版本/子集。
 
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: reviews
+spec:
+  hosts:      # string[]，域名匹配规则，VirtualService中的规则只影响与hosts匹配的请求，可以是 IP 地址、DNS 名称，或者依赖于平台的一个简称（FQDN）。
+  http:	      # HTTPRoute[]， HTTP流量规则配置
+  tls:        # TLSRoute[]，TLS & HTTPS流量规则配置
+  exportTo:   # string[], virtualservice export到指定的namespace，即规则在该命名空间中的sidecar和gateway生效。
+  gateways:   # string[]，配置流量规则的gateway和sidecar。
+```
+
+## 默认规则
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: reviews
+spec:
+  hosts:
+  - reviews		# 域名匹配规则，VirtualService中的规则只影响与hosts匹配的请求，可以是 IP 地址、DNS 名称，或者依赖于平台的一个简称（FQDN）。
+  http:
+  - route:
+    - destination:	# 默认路由规则，确保流经虚拟服务的流量至少能够匹配一条路由规则
+        host: reviews
+```
+
+## 服务subset
 
 ```YAML
 apiVersion: networking.istio.io/v1alpha3
@@ -25,6 +56,163 @@ spec:
         subset: v3
 ```
 
+## 多服务
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: bookinfo
+spec:
+  hosts:
+    - bookinfo.com			# 匹配同一个域名
+  http:
+  - match:
+    - uri:
+        prefix: /reviews
+    route:
+    - destination:
+        host: reviews		# /reviews前缀的请求，路由到reviews服务
+  - match:
+    - uri:
+        prefix: /ratings
+    route:
+    - destination:
+        host: ratings		# /ratings前缀的请求，路由到ratings服务
+```
+
+## 默认路由权重分流
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: reviews-route
+spec:
+  hosts:
+  - reviews.prod.svc.cluster.local
+  http:
+  - route:                 # 默认路由规则
+    - destination:
+        host: reviews.prod.svc.cluster.local
+        subset: v2
+      weight: 25
+    - destination:
+        host: reviews.prod.svc.cluster.local
+        subset: v1
+      weight: 75
+```
+
+## 修改header
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: reviews-route
+spec:
+  hosts:
+  - reviews.prod.svc.cluster.local
+  http:
+  - headers:
+      request:
+        set:			# 修改请求header，如果添加header使用add，HTTPRoute对象中设置
+          test: true
+    route:
+    - destination:
+        host: reviews.prod.svc.cluster.local
+        subset: v2
+      weight: 25
+    - destination:
+        host: reviews.prod.svc.cluster.local
+        subset: v1
+      headers:
+        response:
+          remove:		# 删除响应header，HTTPRouteDestination对象中设置
+          - foo
+      weight: 75
+```
+
+## 请求超时
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: my-productpage-rule
+spec:
+  hosts:
+  - productpage.prod.svc.cluster.local
+  http:
+  - timeout: 5s			# 请求超时为，HTTPRoute对象中设置
+    route:
+    - destination:
+        host: productpage.prod.svc.cluster.local
+```
+
+## 请求重试
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ratings-route
+spec:
+  hosts:
+  - ratings.prod.svc.cluster.local
+  http:
+  - route:
+    - destination:
+        host: ratings.prod.svc.cluster.local
+        subset: v1
+    retries:			# 请求重试，HTTPRoute对象中设置
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream
+```
+		
+## 重定向
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ratings-route
+spec:
+  hosts:
+  - ratings.prod.svc.cluster.local
+  http:
+  - match:
+    - uri:
+        exact: /v1/getProductRatings
+    redirect:
+      uri: /v1/bookRatings                              # 重定向地址， 默认的重定向code为301，HTTPRoute对象中设置
+      authority: newratings.default.svc.cluster.local   # 修改URL中的Authority/Host值
+```
+
+## Path重写
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ratings-route
+spec:
+  hosts:
+  - ratings.prod.svc.cluster.local
+  http:
+  - match:
+    - uri:
+        prefix: /ratings
+    rewrite:
+      uri: /v1/bookRatings				# 重写path，HTTPRoute对象中设置
+    route:
+    - destination:
+        host: ratings.prod.svc.cluster.local
+        subset: v1
+```
+
+
 # Gateway
 
 ```YAML
@@ -48,13 +236,134 @@ servers:
        privateKey: /tmp/tls.key  # 私钥
 ```
 
+# Sidecar
+
+Sidecar定义了应用流量拦截的Proxy。
+
+## 全局默认Sidecar
+
+全局Sidecar没有设置workloadSelector值，只允许访问当前命名空间和istio-system命名空间中的service。每个namespace只能配置一个Sidecar。
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: Sidecar
+metadata:
+  name: default
+  namespace: istio-config
+spec:
+  egress:
+  - hosts:
+    - "./*"
+    - "istio-system/*"
+```
+
+## 全局自定义Sidecar
+
+全局Sidecar没有设置workloadSelector值，允许访问prod-us1、prod-apis和istio-system命名空间中的service。
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: Sidecar
+metadata:
+  name: default
+  namespace: prod-us1
+spec:
+  egress:
+  - hosts:
+    - "prod-us1/*"
+    - "prod-apis/*"
+    - "istio-system/*"
+```
+
+## 服务Sidecar
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: Sidecar
+metadata:
+  name: ratings
+  namespace: prod-us1	# 指定namespace
+spec:
+  workloadSelector:
+    labels:
+      app: ratings		# 指定pod，这些pod属于ratings.prod-us1服务
+  ingress:
+  - port:
+      number: 9080		# POD接受指向9080端口的请求
+      protocol: HTTP
+      name: somename
+    defaultEndpoint: unix:///var/run/someuds.sock   # 业务容器监听的socket
+  egress:
+  - port:
+      number: 9080
+      protocol: HTTP
+      name: egresshttp
+    hosts:
+    - "prod-us1/*"		# 只允许访问prod-us1命名空间下9080端口的HTTP协议请求
+  - hosts:
+    - "istio-system/*"
+```
+
+## 非IPtables拦截的Sidecar
+
+非iptables拦截的Sidecar需要在
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: Sidecar
+metadata:
+  name: no-ip-tables
+  namespace: prod-us1
+spec:
+  workloadSelector:
+    labels:
+      app: productpage
+  ingress:
+  - port:
+      number: 9080        # binds to proxy_instance_ip:9080 ，pod可以接受该端口的请求
+      protocol: HTTP
+      name: somename
+    defaultEndpoint: 127.0.0.1:8080   # 业务监听在8080端口
+    captureMode: NONE     # not needed if metadata is set for entire proxy
+  egress:
+  - port:
+      number: 3306
+      protocol: MYSQL
+      name: egressmysql
+    captureMode: NONE     # not needed if metadata is set for entire proxy
+    bind: 127.0.0.1       # Sidecar监听本地的3306端口
+    hosts:
+    - "*/mysql.foo.com"   # 代理请求到mysql.foo.com:3306。
+```
+
 # ServiceEntry
+
+ServiceEntry用于定义服务网格外的服务，包括网格内非K8S部署的服务，以及网格外的服务。
 
 ```YAML
 apiVersion: networking.istio.io/v1alpha3
 kind: ServiceEntry
 metadata:  
   name: vmapp  
+  namespace: powerful
+spec:  
+  exportTo:   # 默认情况下使用“*”，这意味着该ServiceEntry公开给每个命名空间。“.”仅将其限制为当前命名空间。
+  hosts:      # 外部服务域名，VirtualService和DestinationRule中hosts映射。
+  location:   # 服务位置，MESH_EXTERNAL（外部API）和MESH_INTERNAL（网格内VM部署）两种。
+  ports:      # 外部服务端口
+  resolution: # 服务发现机制，NONE（IP地址已经解析过，是真实的目的IP地址）、STATIC（静态设置endpoint）和DNS（使用hosts获取IP）  
+  endpoints:  # 服务endpoints配置
+  workloadSelector:  # 服务关联的workloadEntry，或者k8s pod。
+  subjectAltNames:   # ？？？？？
+```
+
+## 单个endpoint
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:  
+  name: vmapp
   namespace: powerful
 spec:  
   exportTo:  
@@ -75,6 +384,183 @@ spec:
       ports:      
         http: 19990              # 虚拟机上服务暴露的端口
 ```
+
+## 多个endpoint
+
+```YAML
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-svc-mongocluster
+spec:
+  hosts:
+  - mymongodb.somedomain 	
+  addresses:
+  - 192.192.192.192/24      # 网络地址
+  ports:
+  - number: 27018           # 服务端口
+    name: mongodb
+    protocol: MONGO
+  location: MESH_INTERNAL
+  resolution: STATIC
+  endpoints:
+  - address: 2.2.2.2
+  - address: 3.3.3.3
+```
+
+## 指定WorkloadEntry
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: details-svc
+spec:
+  hosts:
+  - details.bookinfo.com
+  location: MESH_INTERNAL
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+    targetPort: 8080	# The port number on the endpoint where the traffic will be received.
+  resolution: STATIC
+  workloadSelector:
+    labels:
+      app: details-legacy	# 指向携带app: details-legacy标签的WorkloadEntry
+```
+
+## 外部API服务
+
+```YAML
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-svc-https
+spec:
+  hosts:
+  - api.dropboxapi.com
+  - www.googleapis.com
+  - api.facebook.com
+  location: MESH_EXTERNAL	# 网格外部
+  ports:
+  - number: 443
+    name: https
+    protocol: TLS
+  resolution: DNS		# 解析hosts中的域名
+```
+
+# WorkloadEntry
+
+WorkloadEntry用于定义一个非K8S部署的工作负载，例如VM或物理机上部署的应用。
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: WorkloadEntry
+metadata:
+  name: details-svc
+spec:
+  # use of the service account indicates that the workload has a
+  # sidecar proxy bootstrapped with this service account. Pods with
+  # sidecars will automatically communicate with the workload using
+  # istio mutual TLS.
+  serviceAccount:   # string，service account（所属namespace中必需包含该service account）
+  address:          # string， 工作负载地址
+  labels:           # map<string, string>， 工作负载标签
+  ports:            # map<string, uint32>，工作负载端口
+  network:          # string，工作负载所属网络
+  locality:         # string，工作负载所属可用区
+  weight:           # uint32，工作负载流量权重
+```
+
+## 静态IP地址的工作负载
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: WorkloadEntry
+metadata:
+  name: details-svc
+spec:
+  # use of the service account indicates that the workload has a
+  # sidecar proxy bootstrapped with this service account. Pods with
+  # sidecars will automatically communicate with the workload using
+  # istio mutual TLS.
+  serviceAccount: details-legacy
+  address: 2.2.2.2                 # 指定IP地址
+  labels:
+    app: details-legacy
+    instance-id: vm1
+```
+
+## 域名地址的工作负载
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: WorkloadEntry
+metadata:
+  name: details-svc
+spec:
+  # use of the service account indicates that the workload has a
+  # sidecar proxy bootstrapped with this service account. Pods with
+  # sidecars will automatically communicate with the workload using
+  # istio mutual TLS.
+  serviceAccount: details-legacy
+  address: vm1.vpc01.corp.net       # 指定域名
+  labels:
+    app: details-legacy
+    instance-id: vm1
+```
+
+# WorkloadGroup 
+
+WorkloadGroup 主要用于 WorkloadEntry 自动注册。
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: WorkloadGroup
+metadata:
+  name: reviews
+  namespace: bookinfo
+spec:
+  metadata:  # ObjectMeta，WorkloadEntry的labels和annotations定义
+  template:  # WorkloadEntry，生成WorkloadEntry的模板
+  probe:     # ReadinessProbe，workload健康检查
+```
+
+## 示例
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: WorkloadGroup
+metadata:
+  name: reviews                #  vm 上 reviews 实例启动后，都会自动在 mesh 中创建一个WorkloadEntry。
+  namespace: bookinfo
+spec:
+  metadata:
+    labels:
+      app.kubernetes.io/name: reviews
+      app.kubernetes.io/version: "1.3.4"
+  template:
+    ports:
+      grpc: 3550
+      http: 8080
+    serviceAccount: default
+  probe:
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 4
+    successThreshold: 3
+    failureThreshold: 3
+    httpGet:
+     path: /foo/bar
+     host: 127.0.0.1
+     port: 3100
+     scheme: HTTPS
+     httpHeaders:
+     - name: Lit-Header
+       value: Im-The-Best
+```
+
 
 
 
