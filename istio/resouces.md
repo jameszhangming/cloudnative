@@ -385,7 +385,7 @@ spec:
         http: 19990              # 虚拟机上服务暴露的端口
 ```
 
-## 多个endpoint
+## 多个endpoint（IP）
 
 ```YAML
 apiVersion: networking.istio.io/v1beta1
@@ -406,6 +406,34 @@ spec:
   endpoints:
   - address: 2.2.2.2
   - address: 3.3.3.3
+```
+
+## 多个endpoint（域名）
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-svc-dns
+spec:
+  hosts:
+  - foo.bar.com
+  location: MESH_EXTERNAL
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+  resolution: DNS
+  endpoints:
+  - address: us.foo.bar.com
+    ports:
+      http: 8080
+  - address: uk.foo.bar.com
+    ports:
+      http: 9080
+  - address: in.foo.bar.com
+    ports:
+      http: 7080
 ```
 
 ## 指定WorkloadEntry
@@ -448,6 +476,26 @@ spec:
     name: https
     protocol: TLS
   resolution: DNS		# 解析hosts中的域名
+```
+
+## client本地socket服务
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: unix-domain-socket-example
+spec:
+  hosts:
+  - "example.unix.local"
+  location: MESH_EXTERNAL
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+  resolution: STATIC
+  endpoints:
+  - address: unix:///var/run/example/socket    # client本地socket服务
 ```
 
 # WorkloadEntry
@@ -559,6 +607,78 @@ spec:
      httpHeaders:
      - name: Lit-Header
        value: Im-The-Best
+```
+
+# 应用场景
+
+## egress gateway代理外部服务
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-svc-httpbin
+  namespace : egress
+spec:
+  hosts:
+  - httpbin.com			# 外部服务域名
+  exportTo:
+  - "."					# 该服务仅对本命名空间开放
+  location: MESH_EXTERNAL	# 外部API服务
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+  resolution: DNS		# 通过DNS解析域名
+```
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+ name: istio-egressgateway   # 网关名
+ namespace: istio-system
+spec:
+ selector:
+   istio: egressgateway		# 选择网关POD
+ servers:
+ - port:
+     number: 80
+     name: http
+     protocol: HTTP
+   hosts:
+   - "*"					# 所有域名
+```
+
+```YAML
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: gateway-routing
+  namespace: egress
+spec:
+  hosts:
+  - httpbin.com
+  exportTo:
+  - "*"
+  gateways:
+  - mesh
+  - istio-egressgateway
+  http:
+  - match:
+    - port: 80
+      gateways:         # ？？？？？？？？
+      - mesh
+    route:
+    - destination:
+        host: istio-egressgateway.istio-system.svc.cluster.local     # 转发请求到gateway
+  - match:
+    - port: 80
+      gateways:
+      - istio-egressgateway
+    route:
+    - destination:
+        host: httpbin.com        # 转发请求道httpbin.com服务，即ServiceEntry定义的外部服务
 ```
 
 
