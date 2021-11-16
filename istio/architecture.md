@@ -8,7 +8,7 @@ Istio 服务网格逻辑上分为数据平面和控制平面。
 
 * 控制平面负责管理和配置代理来路由流量。此外控制平面配置 Mixer 以实施策略和收集遥测数据。
 
-![istio1.1 arch](images/istio1.1 arch.jpeg "istio1.1 arch")
+![istio1.1 arch](images/istio1.1 arch.png "istio1.1 arch")
 
 ### Envoy
 
