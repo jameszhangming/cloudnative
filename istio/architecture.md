@@ -49,9 +49,78 @@ Galley ´ú±íÆäËûµÄ Istio ¿ØÖÆÆ½Ãæ×é¼ş£¬ÓÃÀ´ÑéÖ¤ÓÃ»§±àĞ´µÄ Istio API ÅäÖÃ¡£Ëæ×ÅÊ±¼
 
 # ×é¼şÉî¶ÈÆÊÎö
 
-## galley
+## Pilot
 
-### galley ¼Ü¹¹
+Pilot½«·şÎñĞÅÏ¢ºÍÅäÖÃÊı¾İ×ª»»ÎªxDS½Ó¿ÚµÄ±ê×¼Êı¾İ½á¹¹£¬Í¨¹ıgRPCÏÂ·¢µ½Êı¾İÃæµÄEnvoy¡£Èç¹û°ÑPilot¿´³ÉÒ»¸ö´¦ÀíÊı¾İµÄºÚºĞ£¬ÔòÆäÓĞÁ½¸öÊäÈë£¬Ò»¸öÊä³ö£º
+
+![pilot arch](images/pilot arch.png "pilot arch")
+
+Ä¿Ç°PilotµÄÊäÈë°üÀ¨Á½²¿·ÖÊı¾İÀ´Ô´£º
+
+* ·şÎñÊı¾İ£º À´Ô´ÓÚ¸÷¸ö·şÎñ×¢²á±í(Service Registry)£¬ÀıÈçKubernetesÖĞ×¢²áµÄService£¬Consul CatalogÖĞµÄ·şÎñµÈ¡£
+* ÅäÖÃ¹æÔò£º ¸÷ÖÖÅäÖÃ¹æÔò£¬°üÀ¨Â·ÓÉ¹æÔò¼°Á÷Á¿¹ÜÀí¹æÔòµÈ£¬Í¨¹ıKubernetes CRD(Custom Resources Definition)ĞÎÊ½¶¨Òå²¢´æ´¢ÔÚKubernetesÖĞ¡£
+
+PilotµÄÊä³öÎª·ûºÏxDS½Ó¿ÚµÄÊı¾İÃæÅäÖÃÊı¾İ£¬²¢Í¨¹ıgRPC Streaming½Ó¿Ú½«ÅäÖÃÊı¾İÍÆËÍµ½Êı¾İÃæµÄEnvoyÖĞ¡£
+
+### Config Controller
+
+Config ControllerÓÃÓÚ¹ÜÀí¸÷ÖÖÅäÖÃÊı¾İ£¬°üÀ¨ÓÃ»§´´½¨µÄÁ÷Á¿¹ÜÀí¹æÔòºÍ²ßÂÔ¡£IstioÄ¿Ç°Ö§³ÖÈıÖÖÀàĞÍµÄConfig Controller£º
+
+* Kubernetes£ºÊ¹ÓÃKubernetesÀ´×÷ÎªÅäÖÃÊı¾İµÄ´æ´¢£¬¸Ã·½Ê½Ö±½ÓÒÀ¸½ÓÚKubernetesÇ¿´óµÄCRD»úÖÆÀ´´æ´¢ÅäÖÃÊı¾İ£¬¼òµ¥·½±ã£¬ÊÇIstio×î¿ªÊ¼Ê¹ÓÃµÄÅäÖÃ´æ´¢·½°¸¡£
+* MCP (Mesh Configuration Protocol)£ºÊ¹ÓÃKubernetesÀ´´æ´¢ÅäÖÃÊı¾İµ¼ÖÂÁËIstioºÍKubernetesµÄñîºÏ£¬ÏŞÖÆÁËIstioÔÚ·ÇKubernetes»·¾³ÏÂµÄÔËÓÃ¡£ÎªÁË½â¾ö¸ÃñîºÏ£¬IstioÉçÇøÌá³öÁËMCP£¬MCP¶¨ÒåÁËÒ»¸öÏòIstio¿ØÖÆÃæÏÂ·¢ÅäÖÃÊı¾İµÄ±ê×¼Ğ­Òé£¬Istio Pilot×÷ÎªMCP Client£¬ÈÎºÎÊµÏÖÁËMCPĞ­ÒéµÄServer¶¼¿ÉÒÔÍ¨¹ıMCPĞ­ÒéÏòPilotÏÂ·¢ÅäÖÃ£¬´Ó¶ø½â³ıÁËIstioºÍKubernetesµÄñîºÏ¡£Èç¹ûÏëÒªÁË½â¸ü¶à¹ØÓÚMCPµÄÄÚÈİ£¬Çë²Î¿¼ÎÄºóµÄÁ´½Ó¡£
+* Memory£ºÒ»¸öÔÚÄÚ´æÖĞµÄConfig ControllerÊµÏÖ£¬Ö÷ÒªÓÃÓÚ²âÊÔ¡£
+
+Ä¿Ç°IstioµÄÅäÖÃ°üÀ¨£º
+
+* Virtual Service: ¶¨ÒåÁ÷Á¿Â·ÓÉ¹æÔò¡£
+* Destination Rule: ¶¨ÒåºÍÒ»¸ö·şÎñ»òÕßsubsetÏà¹ØµÄÁ÷Á¿´¦Àí¹æÔò£¬°üÀ¨¸ºÔØ¾ùºâ²ßÂÔ£¬Á¬½Ó³Ø´óĞ¡£¬¶ÏÂ·Æ÷ÉèÖÃ£¬subset¶¨ÒåµÈµÈ¡£
+* Gateway: ¶¨ÒåÈë¿ÚÍø¹ØÉÏ¶ÔÍâ±©Â¶µÄ·şÎñ¡£
+* Service Entry: Í¨¹ı¶¨ÒåÒ»¸öService Entry¿ÉÒÔ½«Ò»¸öÍâ²¿·şÎñÊÖ¶¯Ìí¼Óµ½·şÎñÍø¸ñÖĞ¡£
+* Envoy Filter: Í¨¹ıPilotÔÚEnvoyµÄÅäÖÃÖĞÌí¼ÓÒ»¸ö×Ô¶¨ÒåµÄFilter¡£
+
+### Service Controller
+
+Service ControllerÓÃÓÚ¹ÜÀí¸÷ÖÖService Registry£¬Ìá³ö·şÎñ·¢ÏÖÊı¾İ£¬Ä¿Ç°IstioÖ§³ÖµÄService Registry°üÀ¨£º
+
+* Kubernetes£º¶Ô½ÓKubernetes Registry£¬¿ÉÒÔ½«KubernetesÖĞ¶¨ÒåµÄServiceºÍInstance²É¼¯µ½IstioÖĞ¡£
+* Consul£º ¶Ô½ÓConsul Catalog£¬½«ConsulÖĞ¶¨ÒåµÄService²É¼¯µ½IstioÖĞ¡£
+* MCP£º ºÍMCP config controllerÀàËÆ£¬´ÓMCP ServerÖĞ»ñÈ¡ServiceºÍService Instance¡£
+* Memory£º Ò»¸öÄÚ´æÖĞµÄService ControllerÊµÏÖ£¬Ö÷ÒªÓÃÓÚ²âÊÔ¡£
+
+### Discovery Service
+
+Discovery ServiceÖĞÖ÷Òª°üº¬ÏÂÊöÂß¼­£º
+
+* Æô¶¯gRPC Server²¢½ÓÊÕÀ´×ÔEnvoy¶ËµÄÁ¬½ÓÇëÇó¡£
+* ½ÓÊÕEnvoy¶ËµÄxDSÇëÇó£¬´ÓConfig ControllerºÍService ControllerÖĞ»ñÈ¡ÅäÖÃºÍ·şÎñĞÅÏ¢£¬Éú³ÉÏìÓ¦ÏûÏ¢·¢ËÍ¸øEnvoy¡£
+* ¼àÌıÀ´×ÔConfig ControllerµÄÅäÖÃ±ä»¯ÏûÏ¢ºÍÀ´×ÔService ControllerµÄ·şÎñ±ä»¯ÏûÏ¢£¬²¢½«ÅäÖÃºÍ·şÎñ±ä»¯ÄÚÈİÍ¨¹ıxDS½Ó¿ÚÍÆËÍµ½Envoy¡££¨±¸×¢£ºÄ¿Ç°PilotÎ´ÊµÏÖÔöÁ¿±ä»¯ÍÆËÍ£¬Ã¿´Î±ä»¯ÍÆËÍµÄÊÇÈ«Á¿ÅäÖÃ£¬ÔÚÍø¸ñÖĞ·şÎñ½Ï¶àµÄÇé¿öÏÂ¿ÉÄÜ»áÓĞĞÔÄÜÎÊÌâ£©¡£
+
+**´´½¨gRPC Server²¢½ÓÊÕEnvoyµÄÁ¬½ÓÇëÇó**
+
+Pilot Server´´½¨ÁËÒ»¸ögRPC Server£¬ÓÃÓÚ¼àÌıºÍ½ÓÊÕÀ´×ÔEnvoyµÄxDSÇëÇó¡£pilot/pkg/proxy/envoy/v2/ads.go ÖĞµÄ DiscoveryServer.StreamAggregatedResources·½·¨±»×¢²áÎªgRPC ServerµÄ·şÎñ´¦Àí·½·¨¡£
+
+µ±gRPC ServerÊÕµ½À´×ÔEnvoyµÄÁ¬½ÓÊ±£¬»áµ÷ÓÃDiscoveryServer.StreamAggregatedResources·½·¨£¬ÔÚ¸Ã·½·¨ÖĞ´´½¨Ò»¸öXdsConnection¶ÔÏó£¬²¢¿ªÆôÒ»¸ögoroutine´Ó¸ÃconnectionÖĞ½ÓÊÕ¿Í»§¶ËµÄxDSÇëÇó²¢½øĞĞ´¦Àí£»Èç¹û¿ØÖÆÃæµÄÅäÖÃ·¢Éú±ä»¯£¬PilotÒ²»áÍ¨¹ı¸Ãconnection°ÑÅäÖÃ±ä»¯Ö÷¶¯ÍÆËÍµ½Envoy¶Ë¡£
+
+**ÅäÖÃ±ä»¯ºóÏòEnvoyÍÆËÍ¸üĞÂ**
+
+ÕâÊÇPilotÖĞ×î¸´ÔÓµÄÒ»¸öÒµÎñÁ÷³Ì£¬Ö÷ÒªÊÇÒòÎª´úÂëÖĞ²ÉÓÃÁË¶à¸öchannelºÍqueue¶Ô±ä»¯ÏûÏ¢½øĞĞºÏ²¢ºÍ×ª·¢¡£¸ÃÒµÎñÁ÷³ÌÈçÏÂ£º
+
+* Config Controller»òÕßService ControllerÔÚÅäÖÃ»ò·şÎñ·¢Éú±ä»¯Ê±Í¨¹ı»Øµ÷·½·¨Í¨ÖªDiscovery Server£¬Discovery Server½«±ä»¯ÏûÏ¢·ÅÈëµ½Push ChannelÖĞ¡£
+* Discovery ServerÍ¨¹ıÒ»¸ögoroutine´ÓPush ChannelÖĞ½ÓÊÕ±ä»¯ÏûÏ¢£¬½«Ò»¶ÎÊ±¼äÄÚÁ¬Ğø·¢ÉúµÄ±ä»¯ÏûÏ¢½øĞĞºÏ²¢¡£Èç¹û³¬¹ıÖ¸¶¨Ê±¼äÃ»ÓĞĞÂµÄ±ä»¯ÏûÏ¢£¬Ôò½«ºÏ²¢ºóµÄÏûÏ¢¼ÓÈëµ½Ò»¸ö¶ÓÁĞPush QueueÖĞ¡£
+* ÁíÒ»¸ögoroutine´ÓPush QueueÖĞÈ¡³ö±ä»¯ÏûÏ¢£¬Éú³ÉXdsEvent£¬·¢ËÍµ½Ã¿¸ö¿Í»§¶ËÁ¬½ÓµÄPush ChannelÖĞ¡£
+* ÔÚDiscoveryServer.StreamAggregatedResources·½·¨ÖĞ´ÓPush ChannelÖĞÈ¡³öXdsEvent£¬È»ºó¸ù¾İÉÏÏÂÎÄÉú³É·ûºÏxDS½Ó¿Ú¹æ·¶µÄDiscoveryResponse£¬Í¨¹ıgRPCÍÆËÍ¸øEnvoy¶Ë¡££¨gRPC»áÎªÃ¿¸öclientÁ¬½Óµ¥¶À·ÖÅäÒ»¸ögoroutineÀ´½øĞĞ´¦Àí£¬Òò´Ë²»Í¬¿Í»§¶ËÁ¬½ÓµÄStreamAggregatedResources´¦Àí·½·¨ÊÇÔÚ²»Í¬goroutineÖĞ´¦ÀíµÄ£©
+
+**ÏìÓ¦EnvoyÖ÷¶¯·¢ÆğµÄxDSÇëÇó**
+
+PilotºÍEnvoyÖ®¼ä½¨Á¢µÄÊÇÒ»¸öË«ÏòµÄStreaming gRPC·şÎñµ÷ÓÃ£¬Òò´ËPilot¿ÉÒÔÔÚÅäÖÃ±ä»¯Ê±ÏòEnvoyÍÆËÍ£¬EnvoyÒ²¿ÉÒÔÖ÷¶¯·¢ÆğxDSµ÷ÓÃÇëÇó»ñÈ¡ÅäÖÃ¡£EnvoyÖ÷¶¯·¢ÆğxDSÇëÇóµÄÁ÷³ÌÈçÏÂ£º
+
+* EnvoyÍ¨¹ı´´½¨ºÃµÄgRPCÁ¬½Ó·¢ËÍÒ»¸öDiscoveryRequest
+* Discovery ServerÍ¨¹ıÒ»¸ögoroutine´ÓXdsConnectionÖĞ½ÓÊÕÀ´×ÔEnvoyµÄDiscoveryRequest£¬²¢½«ÇëÇó·¢ËÍµ½ReqChannelÖĞ
+* Discovery ServerµÄÁíÒ»¸ögoroutine´ÓReqChannelÖĞ½ÓÊÕDiscoveryRequest£¬¸ù¾İÉÏÏÂÎÄÉú³É·ûºÏxDS½Ó¿Ú¹æ·¶µÄDiscoveryResponse£¬È»ºó·µ»Ø¸øEnvoy¡£
+
+## Galley
+
+### Galley ¼Ü¹¹
 
 ÔçÆÚµÄGalley ½ö½ö¸ºÔğ¶Ô¡¸ÅäÖÃ¡¹½øĞĞÔËĞĞÊ±ÑéÖ¤, istio ¿ØÖÆÃæ¸÷¸ö×é¼ş¸÷×éÈ¥list/watch ¸÷×Ô¹Ø×¢µÄ¡¸ÅäÖÃ¡¹¡£
 
@@ -65,7 +134,7 @@ Galley ´ú±íÆäËûµÄ Istio ¿ØÖÆÆ½Ãæ×é¼ş£¬ÓÃÀ´ÑéÖ¤ÓÃ»§±àĞ´µÄ Istio API ÅäÖÃ¡£Ëæ×ÅÊ±¼
 
 Ëæ×Åistio¹¦ÄÜµÄÑİ½ø, ¿ÉÔ¤¼ûµÄistio CRDÊıÁ¿»¹»á¼ÌĞøÔö¼Ó, ÉçÇø¼Æ»®½«Galley Ç¿»¯Îªistio ¡¸ÅäÖÃ¡¹¿ØÖÆ²ã, Galley ³ıÁË¼ÌĞøÌá¹©¡¸ÅäÖÃ¡¹ÑéÖ¤¹¦ÄÜÍâ, »¹½«Ìá¹©ÅäÖÃ¹ÜÀíÁ÷Ë®Ïß, °üÀ¨ÊäÈë, ×ª»», ·Ö·¢, ÒÔ¼°ÊÊºÏistio¿ØÖÆÃæµÄ¡¸ÅäÖÃ¡¹·Ö·¢Ğ­Òé(MCP)¡£
 
-### galley validate
+### Galley validate
 
 Galley Ê¹ÓÃÁËk8sÌá¹©µÄÁíÒ»¸öAdmission Webhooks: ValidatingWebhook, À´×öÅäÖÃµÄÑéÖ¤:
 
@@ -127,6 +196,48 @@ MCP Ìá¹©ÁËgRPC µÄÊµÏÖ, ÆäÖĞ°üÀ¨2¸öservices: ResourceSource ºÍ ResourceSink, Í¨³£
 
 * ÔÚµ¥k8s¼¯ÈºµÄistio meshÖĞ, GalleyÄ¬ÈÏÊµÏÖÁËResourceSource service, PilotºÍMixer»á×÷Îª¸ÃserviceµÄclientÖ÷¶¯Á¬½ÓGalley½øĞĞÅäÖÃ¶©ÔÄ¡£
 * Galley ¿ÉÒÔÅäÖÃÈ¥Ö÷¶¯Á¬½ÓÔ¶³ÌµÄÆäËûsink, ±ÈÈçËµÔÚ¶àk8s¼¯ÈºµÄmeshÖĞ, Ö÷¼¯ÈºÖĞµÄGalley¿ÉÒÔÎª¶à¸ö¼¯ÈºµÄPilot/MixerÌá¹©ÅäÖÃ¹ÜÀí, ¿ç¼¯ÈºµÄPilot/MixerÎŞ·¨Ö÷¶¯Á¬½ÓÖ÷¼¯ÈºGalley, ÕâÊ±ºòGalley¾Í¿ÉÒÔ×÷ÎªgRPCµÄclient Ö÷¶¯·¢ÆğÁ¬½Ó, ¿ç¼¯ÈºµÄPilot/Mixer×÷ÎªgRPC server ÊµÏÖResourceSink·şÎñ¡£
+
+
+## pilot-agent
+
+pilot-agent¸úenvoy´ò°üÔÚÍ¬Ò»¸ödocker¾µÏñÀï£¬¾µÏñÓÉDockerfile.proxy¶¨Òå¡£Makefile£¨includeÁËtools/istio-docker.mk£©°ÑÕâ¸ödockerfile build³ÉÁË${HUB}/proxy:${TAG}¾µÏñ£¬Ò²¾ÍÊÇKubernetesÀï¸úÓ¦ÓÃ·ÅÔÚÍ¬Ò»¸öpodÏÂµÄsidecar¡£·ÇKubernetesÇé¿öÏÂĞèÒª°Ñpilot-agent¡¢envoy¸úÓ¦ÓÃ²¿ÊğÔÚÒ»Æğ£¬Õâ¸ö¾ÍÓĞµã¡°ÎÛÈ¾¡±Ó¦ÓÃµÄÒâË¼ÁË¡£
+
+ÔÚproxy¾µÏñÖĞ£¬pilot-agent¸ºÔğµÄ¹¤×÷°üÀ¨£º
+
+* Éú³ÉenvoyµÄÅäÖÃ
+* Æô¶¯envoy
+* ¼à¿Ø²¢¹ÜÀíenvoyµÄÔËĞĞ×´¿ö£¬±ÈÈçenvoy³ö´íÊ±pilot-agent¸ºÔğÖØÆôenvoy£¬»òÕßenvoyÅäÖÃ±ä¸üºóreload envoy
+
+### Éú³ÉenvoyÅäÖÃ
+
+envoyµÄÅäÖÃÖ÷ÒªÔÚpilot-agentµÄinit·½·¨ÓëproxyÃüÁî´¦ÀíÁ÷³ÌµÄÇ°°ë²¿·ÖÉú³É¡£ÆäÖĞinit·½·¨Îªpilot-agent¶ş½øÖÆµÄÃüÁîĞĞÅäÖÃ´óÁ¿µÄflagÓëflagÄ¬ÈÏÖµ£¬¶øproxyÃüÁî´¦ÀíÁ÷³ÌµÄÇ°°ë²¿·Ö¸ºÔğ½«ÕâĞ©flag×é×°³ÉÎªenvoyµÄÅäÖÃProxyConfig¶ÔÏó¡£
+
+**role**
+
+pilot-agentÓĞÈıÖÖÔËĞĞÄ£Ê½£º
+
+* ¡°sidecar¡± Ä¬ÈÏÖµ£¬¿ÉÒÔÔÚÆô¶¯pilot-agent£¬µ÷ÓÃproxyÃüÁîÊ±¸²¸Ç¡£Sidecar type is used for sidecar proxies in the application containers
+* ¡°ingress¡± Ingress type is used for cluster ingress proxies
+* ¡°router¡± Router type is used for standalone proxies acting as L7/L4 routers
+
+**·şÎñ×¢²áÖĞĞÄ£¨service registry£©**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
