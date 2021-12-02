@@ -2,13 +2,11 @@
 
 在 `cluster1` 和 `cluster2` 两个集群上安装 Istio 控制平面， 将每一个集群都设置为主集群（primary cluster）。 两个集群都运行在网络 `network1` 上，所以两个集群中的 Pod 可以直接通信。
 
-继续安装之前，确保完成了[准备工作](https://istio.io/latest/zh/docs/setup/install/multicluster/before-you-begin)中的步骤。
-
 在此配置中，每一个控制平面都会监测两个集群 API 服务器的服务端点。
 
 服务的工作负载（pod 到 pod）跨集群边界直接通讯。
 
-![image-20211202150046070](/Users/zhangming01/Documents/GitHub/cloudnative/concepts/images/multicluster_multi_master.png)
+![image-20211202150046070](images/multicluster_multi_master.png)
 
 ## 将 `cluster1` 设为主集群
 
@@ -84,7 +82,7 @@ $ istioctl x create-remote-secret \
 
 在 `cluster1` 主集群（primary cluster） 安装 Istio 控制平面， 并设置 `cluster2` 从集群（remote cluster）指向 `cluster1` 的控制平面。 两个集群都运行在 `network1` 网络上，所以两个集群的 Pod 之间，网络可直接连通。
 
-![image-20211202135522380](/Users/zhangming01/Documents/GitHub/cloudnative/concepts/images/multicluster_master_remote.png)
+![image-20211202135522380](images/multicluster_master_remote.png)
 
 ## 将 `cluster1` 设为主集群
 
@@ -257,7 +255,7 @@ $ istioctl install --context="${CTX_CLUSTER2}" -f cluster2.yaml
 
 跨集群边界的服务负载，通过专用的[东西向](https://en.wikipedia.org/wiki/East-west_traffic)网关，以间接的方式通讯。每个集群中的网关在其他集群必须可以访问。
 
-![image-20211202150602214](/Users/zhangming01/Documents/GitHub/cloudnative/concepts/images/multicluster_multi_network_master.png)
+![image-20211202150602214](images/multicluster_multi_network_master.png)
 
 ## 为 `cluster1` 设置缺省网络
 
