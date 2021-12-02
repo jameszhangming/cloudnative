@@ -15,7 +15,7 @@ spec:
   gateways:   # string[]，配置流量规则的gateway和sidecar。
 ```
 
-## 默认规则
+## 分流-默认规则
 
 ```YAML
 apiVersion: networking.istio.io/v1alpha3
@@ -31,7 +31,7 @@ spec:
         host: reviews
 ```
 
-## 服务subset
+## 分流-服务subset
 
 ```YAML
 apiVersion: networking.istio.io/v1alpha3
@@ -56,7 +56,7 @@ spec:
         subset: v3
 ```
 
-## 多服务
+## 分流-多服务
 
 ```YAML
 apiVersion: networking.istio.io/v1alpha3
@@ -81,7 +81,7 @@ spec:
         host: ratings		# /ratings前缀的请求，路由到ratings服务
 ```
 
-## 默认路由权重分流
+## 分流-默认路由权重分流
 
 ```YAML
 apiVersion: networking.istio.io/v1alpha3
@@ -170,7 +170,7 @@ spec:
       perTryTimeout: 2s
       retryOn: gateway-error,connect-failure,refused-stream
 ```
-		
+
 ## 重定向
 
 ```YAML
@@ -801,7 +801,6 @@ spec:
     - destination:
         host: httpbin.com        # 转发请求道httpbin.com服务，即ServiceEntry定义的外部服务
 ```
-
 
 
 
