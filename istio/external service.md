@@ -229,3 +229,117 @@ $ kubectl exec "$SOURCE_POD" -c sleep -- curl -sS http://httpbin.org/headers
 ```
 $ istioctl install <flags-you-used-to-install-Istio>
 ```
+
+# Egress TLS Origination
+
+假设有一个遗留应用正在使用 HTTP 和外部服务进行通信。而运行该应用的组织却收到了一个新的需求，该需求要求必须对所有外部的流量进行加密。 此时，使用 Istio 便可通过修改配置实现此需求，而无需更改应用中的任何代码。 该应用可以发送未加密的 HTTP 请求，然后 Istio 将为应用加密请求。
+
+从应用源头发送未加密的 HTTP 请求并让 Istio 执行 TSL 升级的另一个好处是可以产生更好的遥测并为未加密的请求提供更多的路由控制。
+
+## 配置对外部服务的访问
+
+1. 创建一个 `ServiceEntry` 启用对 `edition.cnn.com` 的访问：
+
+   ```
+   $ kubectl apply -f - <<EOF
+   apiVersion: networking.istio.io/v1alpha3
+   kind: ServiceEntry
+   metadata:
+     name: edition-cnn-com
+   spec:
+     hosts:
+     - edition.cnn.com
+     ports:
+     - number: 80
+       name: http-port
+       protocol: HTTP
+     - number: 443
+       name: https-port
+       protocol: HTTPS
+     resolution: DNS
+   EOF
+   ```
+
+2. 向外部的 HTTP 服务发送请求：
+
+   ```
+   $ kubectl exec "${SOURCE_POD}" -c sleep -- curl -sSL -o /dev/null -D - http://edition.cnn.com/politics
+   
+   HTTP/1.1 301 Moved Permanently
+   ...
+   location: https://edition.cnn.com/politics
+   ...
+   
+   HTTP/2 200
+   ...
+   ```
+
+请注意 *curl* 的 `-L` 标志，该标志指示 *curl* 将遵循重定向。 在这种情况下，服务器将对到 `http://edition.cnn.com/politics` 的 HTTP 请求返回重定向响应 ([301 Moved Permanently](https://tools.ietf.org/html/rfc2616#section-10.3.2))。 而重定向响应将指示客户端使用 HTTPS 向 `https://edition.cnn.com/politics` 重新发送请求。 对于第二个请求，服务器则返回了请求的内容和 *200 OK* 状态码。
+
+尽管 *curl* 命令简明地处理了重定向，但是这里有两个问题。 第一个问题是请求冗余，它使获取 `http://edition.cnn.com/politics` 内容的延迟加倍。 第二个问题是 URL 中的路径（在本例中为 *politics* ）被以明文的形式发送。 如果有人嗅探您的应用与 `edition.cnn.com` 之间的通信，他将会知晓该应用获取了此网站中哪些特定的内容。 而出于隐私的原因，您可能希望阻止这些内容被披露。
+
+通过配置 `Istio` 执行 `TLS` 发起，则可以解决这两个问题。
+
+## 用于 egress 流量的 TLS 发起
+
+1. 重新定义上一节的 `ServiceEntry` 和 `VirtualService` 以重写 HTTP 请求端口，并添加一个 `DestinationRule` 以执行 TLS 发起。
+
+   ```
+   $ kubectl apply -f - <<EOF
+   apiVersion: networking.istio.io/v1alpha3
+   kind: ServiceEntry
+   metadata:
+     name: edition-cnn-com
+   spec:
+     hosts:
+     - edition.cnn.com
+     ports:
+     - number: 80
+       name: http-port
+       protocol: HTTP
+       targetPort: 443
+     - number: 443
+       name: https-port
+       protocol: HTTPS
+     resolution: DNS
+   ---
+   apiVersion: networking.istio.io/v1alpha3
+   kind: DestinationRule
+   metadata:
+     name: edition-cnn-com
+   spec:
+     host: edition.cnn.com
+     trafficPolicy:
+       portLevelSettings:
+       - port:
+           number: 80
+         tls:
+           mode: SIMPLE # initiates HTTPS when accessing edition.cnn.com
+   EOF
+   ```
+
+   上面的 `DestinationRule` 将对端口80和 `ServiceEntry` 上的HTTP请求执行TLS发起。然后将端口 80 上的请求重定向到目标端口 443。
+
+1. 如上一节一样，向 `http://edition.cnn.com/politics` 发送 HTTP 请求：
+
+   ```
+   $ kubectl exec "${SOURCE_POD}" -c sleep -- curl -sSL -o /dev/null -D - http://edition.cnn.com/politics
+   
+   HTTP/1.1 200 OK
+   ...
+   ```
+
+   
+
+   这次将会收到唯一的 *200 OK* 响应。 因为 Istio 为 *curl* 执行了 TSL 发起，原始的 HTTP 被升级为 HTTPS 并转发到 `edition.cnn.com`。 服务器直接返回内容而无需重定向。 这消除了客户端与服务器之间的请求冗余，使网格保持加密状态，隐藏了您的应用获取 `edition.cnn.com` 中 *politics* 的事实。
+
+   请注意，您使用了一些与上一节相同的命令。 您可以通过配置 Istio，使以编程方式访问外部服务的应用无需更改任何代码即可获得 TLS 发起的好处。
+
+2. 请注意，使用 HTTPS 访问外部服务的应用程序将继续像以前一样工作：
+
+   ```
+   $ kubectl exec "${SOURCE_POD}" -c sleep -- curl -sSL -o /dev/null -D - https://edition.cnn.com/politics
+   
+   HTTP/2 200
+   ...
+   ```
