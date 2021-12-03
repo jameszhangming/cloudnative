@@ -329,8 +329,6 @@ $ istioctl install <flags-you-used-to-install-Istio>
    ...
    ```
 
-   
-
    这次将会收到唯一的 *200 OK* 响应。 因为 Istio 为 *curl* 执行了 TSL 发起，原始的 HTTP 被升级为 HTTPS 并转发到 `edition.cnn.com`。 服务器直接返回内容而无需重定向。 这消除了客户端与服务器之间的请求冗余，使网格保持加密状态，隐藏了您的应用获取 `edition.cnn.com` 中 *politics* 的事实。
 
    请注意，您使用了一些与上一节相同的命令。 您可以通过配置 Istio，使以编程方式访问外部服务的应用无需更改任何代码即可获得 TLS 发起的好处。
