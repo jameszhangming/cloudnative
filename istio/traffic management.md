@@ -133,6 +133,34 @@ spec:
       weight: 75
 ```
 
+## 故障注入-延时
+
+```
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+spec:
+  hosts:
+  - ratings
+  http:
+  - fault:
+      delay:
+        fixedDelay: 7s  # 延时7秒
+        percentage:
+          value: 100    # 100%延时
+    match:
+    - headers:
+        end-user:
+          exact: jason   # 针对jason用户调用ratings服务
+    route:
+    - destination:
+        host: ratings
+        subset: v1
+  - route:
+    - destination:
+        host: ratings   # 其他用户不注入延时
+        subset: v1
+```
+
 ## 请求超时
 
 ```YAML
@@ -210,6 +238,28 @@ spec:
     - destination:
         host: ratings.prod.svc.cluster.local
         subset: v1
+```
+
+## 镜像
+
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: httpbin
+spec:
+  hosts:
+    - httpbin
+  http:
+  - route:
+    - destination:
+        host: httpbin
+        subset: v1
+      weight: 100
+    mirror:
+      host: httpbin
+      subset: v2       # 流量镜像到 v2版本
+    mirrorPercent: 100
 ```
 
 # DestinationRule
@@ -332,6 +382,29 @@ spec:
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL       #  Istio mutual TLS
+```
+
+## 熔断
+
+```
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: httpbin
+spec:
+  host: httpbin
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+      tcp:
+        maxConnections: 1
+    outlierDetection:
+      baseEjectionTime: 3m
+      consecutive5xxErrors: 1
+      interval: 1s
+      maxEjectionPercent: 100
 ```
 
 # Gateway
