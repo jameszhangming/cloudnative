@@ -1,26 +1,7 @@
-# Autoscaling 
 
-Horizontal Pod Autoscaling (HPA) 可以根据 CPU 使用率或应用自定义 metrics 自动扩展 Pod 数量（支持 replication controller、deployment 和 replica set ）。
+# Service 
 
-* 控制管理器每隔 30s（可以通过 --horizontal-pod-autoscaler-sync-period 修改）查询 metrics 的资源使用情况
-* 支持三种 metrics 类型
-  * 预定义 metrics（比如 Pod 的 CPU）以利用率的方式计算
-  * 自定义的 Pod metrics，以原始值（raw value）的方式计算
-  * 自定义的 object metrics
-* 支持两种 metrics 查询方式：Heapster 和自定义的 REST API
-* 支持多 metrics
-
-
-# 容器类
-
-
-# 存储类
-
-
-# 服务类
-
-
-## Service 
+## selector
 
 定义了一个名为 nginx 的服务，将服务的 80 端口转发到 default namespace 中带有标签 run=nginx 的 Pod 的 80 端口
 
@@ -43,7 +24,9 @@ spec:
   type: ClusterIP
 ```
 
-自定义 endpoint，即创建同名的 service 和 endpoint，在 endpoint 中设置外部服务的 IP 和端口
+## 自定义 endpoint
+
+创建同名的 service 和 endpoint，在 endpoint 中设置外部服务的 IP 和端口。
 
 ```yaml
 kind: Service
@@ -67,6 +50,8 @@ subsets:
       - port: 9376
 ```
 
+## externalName
+
 通过 DNS 转发，在 service 定义中指定 externalName。此时 DNS 服务会给 <service-name>.<namespace>.svc.cluster.local 创建一个 CNAME 记录，其值为 my.database.example.com。并且，该服务不会自动分配 Cluster IP，需要通过 service 的 DNS 来访问。
 
 ```yaml
@@ -80,7 +65,9 @@ spec:
   externalName: my.database.example.com
 ```
 
-不需要 Cluster IP 的服务，通过 <service-name>.<namespace>.svc.cluster.local 访问服务，DNS请求的结果实际为Pod IP地址。
+## 不需要 Cluster IP 
+
+通过 <service-name>.<namespace>.svc.cluster.local 访问服务，DNS请求的结果实际为Pod IP地址。
 
 ```yaml
 apiVersion: v1
@@ -135,9 +122,11 @@ spec:
 
 
 
-## Ingress
+# Ingress
 
-单服务的 Ingress 即该 Ingress 仅指定一个没有任何规则的后端服务。
+## 单服务 Ingress 
+
+该 Ingress 仅指定一个没有任何规则的后端服务。
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -150,7 +139,7 @@ spec:
     servicePort: 80
 ```
 
-多服务的 Ingress
+## 多服务的 Ingress
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -172,7 +161,9 @@ spec:
           servicePort: 80
 ```
 
-虚拟主机 Ingress 即根据名字的不同转发到不同的后端服务上，而他们共用同一个的 IP 地址
+## 虚拟主机 Ingress 
+
+根据域名的不同转发到不同的后端服务上，而他们共用同一个的 IP 地址。
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -195,7 +186,9 @@ spec:
           servicePort: 80
 ```
 
-TLS Ingress 通过 Secret 获取 TLS 私钥和证书 (名为 tls.crt 和 tls.key)，来执行 TLS 终止。
+## TLS Ingress 
+
+ Secret 获取 TLS 私钥和证书 (名为 tls.crt 和 tls.key)，来执行 TLS 终止。
 
 ```yaml
 apiVersion: v1
@@ -222,12 +215,39 @@ spec:
     servicePort: 80
 ```
 
+# Deployment
+
+Deployment 为 Pod 和 ReplicaSet 提供了一个声明式定义 (declarative) 方法，用来替代以前的 ReplicationController 来方便的管理应用。
+
+# Pod
+
+Pod 是一组紧密关联的容器集合，它们共享 IPC、Network 和 UTS namespace，是 Kubernetes 调度的基本单位。Pod 的设计理念是支持多个容器在一个 Pod 中共享网络和文件系统，可以通过进程间通信和文件共享这种简单高效的方式组合完成服务。
+
+![pod](images/pod.png "pod")
+
+Pod 的特征:
+
+* 包含多个共享 IPC、Network 和 UTC namespace 的容器，可直接通过 localhost 通信
+* 所有 Pod 内容器都可以访问共享的 Volume，可以访问共享数据
+* 无容错性：直接创建的 Pod 一旦被调度后就跟 Node 绑定，即使 Node 挂掉也不会被重新调度（而是被自动删除），因此推荐使用 Deployment、Daemonset 等控制器来容错
+* 优雅终止：Pod 删除的时候先给其内的进程发送 SIGTERM，等待一段时间（grace period）后才强制停止依然还在运行的进程
+* 特权容器（通过 SecurityContext 配置）具有改变系统配置的权限（在网络插件中大量应用）
 
 
-# 配置类
+## Pod 生命周期
+
+Kubernetes 以 PodStatus.Phase 抽象 Pod 的状态（但并不直接反映所有容器的状态）。可能的 Phase 包括:
+
+* Pending: Pod 已经在 apiserver 中创建，但还没有调度到 Node 上面
+* Running: Pod 已经调度到 Node 上面，所有容器都已经创建，并且至少有一个容器还在运行或者正在启动
+* Succeeded: Pod 调度到 Node 上面后成功运行结束，并且不会重启
+* Failed: Pod 调度到 Node 上面后至少有一个容器运行失败（即退出码不为 0 或者被系统终止）
+* Unknonwn: 状态未知，通常是由于 apiserver 无法与 kubelet 通信导致
 
 
-## ConfigMap
+
+
+# ConfigMap
 
 在执行应用程式或是生产环境等等, 会有许多的情况需要做变更, 而我们不希望因应每一种需求就要准备一个镜像档, 这时就可以透过 ConfigMap 来帮我们做一个配置档或是命令参数的映射, 更加弹性化使用我们的服务或是应用程式。
 
@@ -253,16 +273,6 @@ DaemonSet 保证在每个 Node 上都运行一个容器副本，常用来部署�
 * 系统程序，比如 kube-proxy, kube-dns, glusterd, ceph 等
 
 
-# Deployment
-
-Deployment 为 Pod 和 ReplicaSet 提供了一个声明式定义 (declarative) 方法，用来替代以前的 ReplicationController 来方便的管理应用。
-
-```yaml
-
-```
-## 
-
-
 # Job
 
 Job 负责批量处理短暂的一次性任务 (short lived one-off tasks)，即仅执行一次的任务，它保证批处理任务的一个或多个 Pod 成功结束。
@@ -284,6 +294,18 @@ Job Controller 负责根据 Job Spec 创建 Pod，并持续监控 Pod 的状态�
 本地数据卷（Local Volume）代表一个本地存储设备，比如磁盘、分区或者目录等。主要的应用场景包括分布式存储和数据库等需要高性能和高可靠性的环境里。本地数据卷同时支持块设备和文件系统，通过 spec.local.path 指定；但对于文件系统来说，kubernetes 并不会限制该目录可以使用的存储空间大小。
 
 本地数据卷只能以静态创建的 PV 使用。相对于 HostPath，本地数据卷可以直接以持久化的方式使用（它总是通过 NodeAffinity 调度在某个指定的节点上）。
+
+# Autoscaling 
+
+Horizontal Pod Autoscaling (HPA) 可以根据 CPU 使用率或应用自定义 metrics 自动扩展 Pod 数量（支持 replication controller、deployment 和 replica set ）。
+
+* 控制管理器每隔 30s（可以通过 --horizontal-pod-autoscaler-sync-period 修改）查询 metrics 的资源使用情况
+* 支持三种 metrics 类型
+  * 预定义 metrics（比如 Pod 的 CPU）以利用率的方式计算
+  * 自定义的 Pod metrics，以原始值（raw value）的方式计算
+  * 自定义的 object metrics
+* 支持两种 metrics 查询方式：Heapster 和自定义的 REST API
+* 支持多 metrics
 
 
 # Namespace
@@ -720,33 +742,6 @@ spec:
       persistentVolumeClaim:
         claimName: myclaim
 ```
-
-
-# Pod
-
-Pod 是一组紧密关联的容器集合，它们共享 IPC、Network 和 UTS namespace，是 Kubernetes 调度的基本单位。Pod 的设计理念是支持多个容器在一个 Pod 中共享网络和文件系统，可以通过进程间通信和文件共享这种简单高效的方式组合完成服务。
-
-![pod](images/pod.png "pod")
-
-Pod 的特征:
-
-* 包含多个共享 IPC、Network 和 UTC namespace 的容器，可直接通过 localhost 通信
-* 所有 Pod 内容器都可以访问共享的 Volume，可以访问共享数据
-* 无容错性：直接创建的 Pod 一旦被调度后就跟 Node 绑定，即使 Node 挂掉也不会被重新调度（而是被自动删除），因此推荐使用 Deployment、Daemonset 等控制器来容错
-* 优雅终止：Pod 删除的时候先给其内的进程发送 SIGTERM，等待一段时间（grace period）后才强制停止依然还在运行的进程
-* 特权容器（通过 SecurityContext 配置）具有改变系统配置的权限（在网络插件中大量应用）
-
-
-## Pod 生命周期
-
-Kubernetes 以 PodStatus.Phase 抽象 Pod 的状态（但并不直接反映所有容器的状态）。可能的 Phase 包括:
-
-* Pending: Pod 已经在 apiserver 中创建，但还没有调度到 Node 上面
-* Running: Pod 已经调度到 Node 上面，所有容器都已经创建，并且至少有一个容器还在运行或者正在启动
-* Succeeded: Pod 调度到 Node 上面后成功运行结束，并且不会重启
-* Failed: Pod 调度到 Node 上面后至少有一个容器运行失败（即退出码不为 0 或者被系统终止）
-* Unknonwn: 状态未知，通常是由于 apiserver 无法与 kubelet 通信导致
-
 
 
 
