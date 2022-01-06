@@ -2,39 +2,43 @@
 
 KubernetesÒÔPod×÷ÎªÓ¦ÓÃ²¿ÊğµÄ×îĞ¡µ¥Î»¡£kubernetes»á¸ù¾İPodµÄÉùÃ÷¶ÔÆä½øĞĞµ÷¶È£¬°üÀ¨´´½¨¡¢Ïú»Ù¡¢Ç¨ÒÆ¡¢Ë®Æ½ÉìËõµÈ£¬Òò´ËPod µÄIPµØÖ·²»ÊÇ¹Ì¶¨µÄ£¬²»·½±ãÖ±½Ó²ÉÓÃPod IP¶Ô·şÎñ½øĞĞ·ÃÎÊ¡£
 
-Îª½â¾ö¸ÃÎÊÌâ£¬KubernetesÌá¹©ÁËService×ÊÔ´£¬Service¶ÔÌá¹©Í¬Ò»¸ö·şÎñµÄ¶à¸öPod½øĞĞ¾ÛºÏ¡£Ò»¸öServiceÌá¹©Ò»¸öĞéÄâµÄCluster IP£¬ºó¶Ë¶ÔÓ¦Ò»¸ö»òÕß¶à¸öÌá¹©·şÎñµÄPod¡£ÔÚ¼¯ÈºÖĞ·ÃÎÊ¸ÃServiceÊ±£¬²ÉÓÃCluster IP¼´¿É£¬Kube-proxy¸ºÔğ½«·¢ËÍµ½Cluster IPµÄÇëÇó×ª·¢µ½ºó¶ËµÄPodÉÏ¡£
+Îª½â¾ö¸ÃÎÊÌâ£¬KubernetesÌá¹©ÁËService×ÊÔ´£¬Service¶ÔÌá¹©Í¬Ò»¸ö·şÎñµÄ¶à¸öPod½øĞĞ¾ÛºÏ:
 
-## Kube-proxy
+* Ò»¸öServiceÌá¹©Ò»¸öĞéÄâµÄCluster IP£¬ºó¶Ë¶ÔÓ¦Ò»¸ö»òÕß¶à¸öÌá¹©·şÎñµÄPod
+* **ÔÚ¼¯ÈºÖĞ**·ÃÎÊ¸ÃServiceÊ±£¬²ÉÓÃCluster IP¼´¿É£¬Kube-proxy¸ºÔğ½«·¢ËÍµ½Cluster IPµÄÇëÇó×ª·¢µ½ºó¶ËµÄPodÉÏ
 
-Kube-proxyÊÇÒ»¸öÔËĞĞÔÚÃ¿¸ö½ÚµãÉÏµÄgoÓ¦ÓÃ³ÌĞò£¬Ö§³ÖÈıÖÖ¹¤×÷Ä£Ê½£º
 
-**userspace**
+## userspace
 
 ¸ÃÄ£Ê½ÏÂkube-proxy»áÎªÃ¿Ò»¸öService´´½¨Ò»¸ö¼àÌı¶Ë¿Ú¡£·¢ÏòCluster IPµÄÇëÇó±»Iptables¹æÔòÖØ¶¨Ïòµ½Kube-proxy¼àÌıµÄ¶Ë¿ÚÉÏ£¬Kube-proxy¸ù¾İLBËã·¨Ñ¡ÔñÒ»¸öÌá¹©·şÎñµÄPod²¢ºÍÆä½¨Á¢Á´½Ó£¬ÒÔ½«ÇëÇó×ª·¢µ½PodÉÏ¡£
 
 ¸ÃÄ£Ê½ÏÂ£¬Kube-proxy³äµ±ÁËÒ»¸öËÄ²ãLoad balancerµÄ½ÇÉ«¡£ÓÉÓÚkube-proxyÔËĞĞÔÚuserspaceÖĞ£¬ÔÚ½øĞĞ×ª·¢´¦ÀíÊ±»áÔö¼ÓÁ½´ÎÄÚºËºÍÓÃ»§¿Õ¼äÖ®¼äµÄÊı¾İ¿½±´£¬Ğ§ÂÊ½ÏÁíÍâÁ½ÖÖÄ£Ê½µÍÒ»Ğ©£»ºÃ´¦ÊÇµ±ºó¶ËµÄPod²»¿ÉÓÃÊ±£¬kube-proxy¿ÉÒÔÖØÊÔÆäËûPod¡£
 
-![k8s kube-proxy userspace](images/k8s kube-proxy userspace.png "k8s kube-proxy userspace")
+![k8s kube-proxy userspace](images/k8s_kube_proxy_userspace.png "k8s kube-proxy userspace")
 
-**iptables**
+
+## iptables
 
 ÎªÁË±ÜÃâÔö¼ÓÄÚºËºÍÓÃ»§¿Õ¼äµÄÊı¾İ¿½±´²Ù×÷£¬Ìá¸ß×ª·¢Ğ§ÂÊ£¬Kube-proxyÌá¹©ÁËiptablesÄ£Ê½¡£ÔÚ¸ÃÄ£Ê½ÏÂ£¬Kube-proxyÎªserviceºó¶ËµÄÃ¿¸öPod´´½¨¶ÔÓ¦µÄiptables¹æÔò£¬Ö±½Ó½«·¢ÏòCluster IPµÄÇëÇóÖØ¶¨Ïòµ½Ò»¸öPod IP¡£
 
 ¸ÃÄ£Ê½ÏÂKube-proxy²»³Ğµ£ËÄ²ã´úÀíµÄ½ÇÉ«£¬Ö»¸ºÔğ´´½¨iptables¹æÔò¡£¸ÃÄ£Ê½µÄÓÅµãÊÇ½ÏuserspaceÄ£Ê½Ğ§ÂÊ¸ü¸ß£¬µ«²»ÄÜÌá¹©Áé»îµÄLB²ßÂÔ£¬µ±ºó¶ËPod²»¿ÉÓÃÊ±Ò²ÎŞ·¨½øĞĞÖØÊÔ¡£
 
-![k8s kube-proxy iptables](images/k8s kube-proxy iptables.png "k8s kube-proxy iptables")
+![k8s kube-proxy iptables](images/k8s_kube_proxy_iptables.png "k8s kube-proxy iptables")
 
-**ipvs**
+
+## ipvs
 
 ¸ÃÄ£Ê½ºÍiptablesÀàËÆ£¬kube-proxy¼à¿ØPodµÄ±ä»¯²¢´´½¨ÏàÓ¦µÄipvs rules¡£ipvsÒ²ÊÇÔÚkernelÄ£Ê½ÏÂÍ¨¹ınetfilterÊµÏÖµÄ£¬µ«²ÉÓÃÁËhash tableÀ´´æ´¢¹æÔò£¬Òò´ËÔÚ¹æÔò½Ï¶àµÄÇé¿öÏÂ£¬IpvsÏà¶Ôiptables×ª·¢Ğ§ÂÊ¸ü¸ß¡£³ı´ËÒÔÍâ£¬ipvsÖ§³Ö¸ü¶àµÄLBËã·¨¡£Èç¹ûÒªÉèÖÃkube-proxyÎªipvsÄ£Ê½£¬±ØĞëÔÚ²Ù×÷ÏµÍ³ÖĞ°²×°IPVSÄÚºËÄ£¿é¡£
+
 
 # NodePort
 
 KubernetesµÄPod IPºÍCluster IP¶¼Ö»ÄÜÔÚ¼¯ÈºÄÚ²¿·ÃÎÊ£¬¶øÎÒÃÇÍ¨³£ĞèÒª´ÓÍâ²¿ÍøÂçÉÏ·ÃÎÊ¼¯ÈºÖĞµÄÄ³Ğ©·şÎñ£¬KubernetesÌá¹©ÁËNodePortÀ´Îª¼¯ÈºÌá¹©Íâ²¿Á÷Á¿Èë¿Ú¡£
 
-NodePortÔÚ¼¯ÈºÖĞµÄÃ¿¸öÖ÷»ú½ÚµãÉÏÎªServiceÌá¹©Ò»¸ö´úÀí¶Ë¿Ú£¬ÒÔÔÊĞí´ÓÖ÷»úÍøÂçÉÏ¶ÔService½øĞĞ·ÃÎÊ¡£
+NodePortÔÚ**¼¯ÈºÖĞµÄÃ¿¸öÖ÷»ú½Úµã**ÉÏÎªServiceÌá¹©Ò»¸ö´úÀí¶Ë¿Ú£¬ÒÔÔÊĞí´ÓÖ÷»úÍøÂçÉÏ¶ÔService½øĞĞ·ÃÎÊ¡£
 
-## www.katacoda.com Ê¾Àı
+
+## NodePort×ÊÔ´
 
 ```CLI
 # ´´½¨service
@@ -52,6 +56,9 @@ NAME                                           READY     STATUS    RESTARTS   AG
 webapp1-nodeport-deployment-785989576b-cjc5b   1/1       Running   0          2m        10.32.0.3
 webapp1-nodeport-deployment-785989576b-tpfqr   1/1       Running   0          2m        10.32.0.5
 ```
+
+
+## NodePortÔ­Àí
 
 ÏÂÃæÊÇKube-proxy´´½¨µÄÏà¹Øiptables¹æÔòÒÔ¼°¶ÔÓ¦µÄËµÃ÷¡£¿ÉÒÔ¿´µ½Kube-proxyÎªNodeport´´½¨ÁËÏàÓ¦µÄIPtable¹æÔò£¬½«·¢Ïò30080Õâ¸öÖ÷»ú¶Ë¿ÚÉÏµÄÁ÷Á¿ÖØ¶¨Ïòµ½ÁËºó¶ËµÄÁ½¸öPod IPÉÏ¡£
 
@@ -91,7 +98,8 @@ NodePortµÄÁ÷Á¿×ª·¢»úÖÆºÍCluster IPµÄiptablesÄ£Ê½ÀàËÆ£¬Î¨Ò»²»Í¬Ö®´¦ÊÇÔÚÖ÷»úÍøÂçÉÏ
 
 ÔÚNodePortÄ£Ê½ÏÂ£¬¼¯ÈºÄÚÍâ²¿µÄÍ¨Ñ¶ÈçÏÂÍ¼ËùÊ¾£º
 
-![nodeport](images/k8s nodeport.png "nodeport")
+![nodeport](images/k8s_nodeport.png "nodeport")
+
 
 # LoadBalance
 
@@ -105,17 +113,19 @@ NodePortÌá¹©ÁËÒ»ÖÖ´ÓÍâ²¿ÍøÂç·ÃÎÊKubernetes¼¯ÈºÄÚ²¿ServiceµÄ·½·¨£¬µ«¸Ã·½·¨´æÔÚÏÂÃ
 
 ÏÂÍ¼Õ¹Ê¾ÁËKubernetesÈçºÎÍ¨¹ıLoadBalancer·½Ê½¶ÔÍâÌá¹©Á÷Á¿Èë¿Ú£¬Í¼ÖĞLoadBalancerºóÃæ½ÓÈëÁËÁ½¸öÖ÷»ú½ÚµãÉÏµÄNodePort£¬ºó¶Ë²¿ÊğÁËÈı¸öPodÌá¹©·şÎñ¡£¸ù¾İ¼¯ÈºµÄ¹æÄ££¬¿ÉÒÔÔÚLoadBalancerºóÃæ¿ÉÒÔ½ÓÈë¸ü¶àµÄÖ÷»ú½Úµã£¬ÒÔ½øĞĞ¸ººÉ·Öµ£¡£
 
-![loadbalance](images/k8s loadbalance.png "loadbalance")
+![loadbalance](images/k8s_loadbalance.png "loadbalance")
 
 LoadBalancerÀàĞÍĞèÒªÔÆ·şÎñÌá¹©ÉÌµÄÖ§³Ö£¬ServiceÖĞµÄ¶¨ÒåÖ»ÊÇÔÚKubernetesÅäÖÃÎÄ¼şÖĞÌá³öÁËÒ»¸öÒªÇó£¬¼´Îª¸ÃService´´½¨Load Balancer£¬ÖÁÓÚÈçºÎ´´½¨ÔòÊÇÓÉGoogle Cloud»òAmazon CloudµÈÔÆ·şÎñÉÌÌá¹©µÄ£¬´´½¨µÄLoad BalancerµÄ¹ı³Ì²»ÔÚKubernetes ClusterµÄ¹ÜÀí·¶Î§ÖĞ¡£
 
 Ä¿Ç°WS, Azure, CloudStack, GCE ºÍ OpenStack µÈÖ÷Á÷µÄ¹«ÓĞÔÆºÍË½ÓĞÔÆÌá¹©ÉÌ¶¼¿ÉÒÔÎªKubernetesÌá¹©Load Balancer¡£Ò»°ãÀ´Ëµ£¬¹«ÓĞÔÆÌá¹©ÉÌ»¹»áÎªLoad BalancerÌá¹©Ò»¸öExternal IP£¬ÒÔÌá¹©Internet½ÓÈë¡£Èç¹ûÄãµÄ²úÆ·Ã»ÓĞÊ¹ÓÃÔÆÌá¹©ÉÌ£¬¶øÊÇ×Ô½¨Kubernetes Cluster£¬ÔòĞèÒª×Ô¼ºÌá¹©LoadBalancer¡£
+
 
 # Ingress
 
 LoadBalancerÀàĞÍµÄServiceÌá¹©µÄÊÇËÄ²ã¸ºÔØ¾ùºâÆ÷£¬µ±Ö»ĞèÒªÏòÍâ±©Â¶Ò»¸ö·şÎñµÄÊ±ºò£¬²ÉÓÃÕâÖÖ·½Ê½ÊÇÃ»ÓĞÎÊÌâµÄ¡£µ«µ±Ò»¸öÓ¦ÓÃĞèÒª¶ÔÍâÌá¹©¶à¸ö·şÎñÊ±£¬²ÉÓÃ¸Ã·½Ê½ÔòÒªÇóÎªÃ¿Ò»¸öËÄ²ã·şÎñ£¨IP+Port£©¶¼´´½¨Ò»¸öÍâ²¿load balancer¡£
 
 Ò»°ãÀ´Ëµ£¬Í¬Ò»¸öÓ¦ÓÃµÄ¶à¸ö·şÎñ/×ÊÔ´»á·ÅÔÚÍ¬Ò»¸öÓòÃûÏÂ£¬ÔÚÕâÖÖÇé¿öÏÂ£¬´´½¨¶à¸öLoad balancerÊÇÍêÈ«Ã»ÓĞ±ØÒªµÄ£¬·´¶ø´øÀ´ÁË¶îÍâµÄ¿ªÏúºÍ¹ÜÀí³É±¾¡£ÁíÍâÖ±½Ó½«·şÎñ±©Â¶¸øÍâ²¿ÓÃ»§Ò²»áµ¼ÖÂÁËÇ°¶ËºÍºó¶ËµÄñîºÏ£¬Ó°ÏìÁËºó¶Ë¼Ü¹¹µÄÁé»îĞÔ£¬Èç¹ûÒÔºóÓÉÓÚÒµÎñĞèÇó¶Ô·şÎñ½øĞĞµ÷Õû»áÖ±½ÓÓ°Ïìµ½¿Í»§¶Ë¡£ÎªÁË½â¾ö¸ÃÎÊÌâ£¬¿ÉÒÔÍ¨¹ıÊ¹ÓÃKubernetes IngressÀ´×÷ÎªÍøÂçÈë¿Ú¡£
+
 
 ## Ingress ¹¦ÄÜ½éÉÜ
 
@@ -124,17 +134,18 @@ Kubernetes IngressÉùÃ÷ÁËÒ»¸öÓ¦ÓÃ²ã£¨OSIÆß²ã£©µÄ¸ºÔØ¾ùºâÆ÷£¬¿ÉÒÔ¸ù¾İHTTPÇëÇóµÄÄÚÈ
 * °´HTTPÇëÇóµÄURL½øĞĞÂ·ÓÉ£ºÍ¬Ò»¸öTCP¶Ë¿Ú½øÀ´µÄÁ÷Á¿¿ÉÒÔ¸ù¾İURLÂ·ÓÉµ½ClusterÖĞµÄ²»Í¬·şÎñ
 * °´HTTPÇëÇóµÄHost½øĞĞÂ·ÓÉ£ºÍ¬Ò»¸öIP½øÀ´µÄÁ÷Á¿¿ÉÒÔ¸ù¾İHTTPÇëÇóµÄHostÂ·ÓÉµ½ClusterÖĞµÄ²»Í¬·şÎñ
 
+
 ## Ingres + LoadBalance
 
 ËäÈ»Ingress ControllerÍ¨¹ıÆß²ãÍø¹ØÎªºó¶ËµÄ¶à¸öServiceÌá¹©ÁËÍ³Ò»µÄÈë¿Ú£¬µ«ÓÉÓÚÆä²¿ÊğÔÚ¼¯ÈºÖĞ£¬Òò´Ë²¢²»ÄÜÖ±½Ó¶ÔÍâÌá¹©·şÎñ¡£Êµ¼ÊÉÏIngressĞèÒªÅäºÏNodePortºÍLoadBalancer²ÅÄÜÌá¹©¶ÔÍâµÄÁ÷Á¿Èë¿Ú£¬ÈçÏÂÍ¼ËùÊ¾£º
 
-![ingress](images/k8s ingress.png "ingress")
+![ingress](images/k8s_ingress.png "ingress")
 
 ÉÏÍ¼ÃèÊöÁËÈçºÎ²ÉÓÃIngressÅäºÏNodePortºÍLoad BalancerÎª¼¯ÈºÌá¹©Íâ²¿Á÷Á¿Èë¿Ú£¬´Ó¸ÃÍØÆËÍ¼ÖĞ¿ÉÒÔ¿´µ½¸Ã¼Ü¹¹µÄÉìËõĞÔ·Ç³£ºÃ£¬ÔÚNodePort£¬Ingress£¬PodµÈ²»Í¬µÄ½ÓÈë²ãÃæ¶¼¿ÉÒÔ¶ÔÏµÍ³½øĞĞË®Æ½À©Õ¹£¬ÒÔÓ¦¶Ô²»Í¬µÄÍâ²¿Á÷Á¿ÒªÇó¡£
 
 ÉÏÍ¼Ö»Õ¹Ê¾ÁËÂß¼­¼Ü¹¹£¬ÏÂÃæµÄÍ¼Õ¹Ê¾ÁË¾ßÌåµÄÊµÏÖÔ­Àí£º
 
-![ingress principle](images/k8s ingress principle.png "ingress principle")
+![ingress principle](images/k8s_ingress_principle.png "ingress principle")
 
 Á÷Á¿´ÓÍâ²¿ÍøÂçµ½´ïPodµÄÍêÕûÂ·¾¶ÈçÏÂ£º
 
@@ -145,12 +156,4 @@ Kubernetes IngressÉùÃ÷ÁËÒ»¸öÓ¦ÓÃ²ã£¨OSIÆß²ã£©µÄ¸ºÔØ¾ùºâÆ÷£¬¿ÉÒÔ¸ù¾İHTTPÇëÇóµÄÄÚÈ
 5. Service½«ÇëÇó×îÖÕµ¼Èëµ½ºó¶ËÌá¹©·şÎñµÄPodÖĞ (iptabes¹æÔò)
 
 ´ÓÇ°ÃæµÄ½éÉÜ¿ÉÒÔ¿´µ½£¬K8S IngressÌá¹©ÁËÒ»¸ö»ù´¡µÄÆß²ãÍø¹Ø¹¦ÄÜµÄ³éÏó¶¨Òå£¬Æä×÷ÓÃÊÇ¶ÔÍâÌá¹©Ò»¸öÆß²ã·şÎñµÄÍ³Ò»Èë¿Ú£¬²¢¸ù¾İURL/HOST½«ÇëÇóÂ·ÓÉµ½¼¯ÈºÄÚ²¿²»Í¬µÄ·şÎñÉÏ¡£
-
-
-
-
-
-
-
-
 
